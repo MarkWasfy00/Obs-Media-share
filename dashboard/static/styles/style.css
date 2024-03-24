@@ -1,0 +1,235 @@
+main .queued-media .queued-top .add-media-layout .duration #youtube-link-duration, main .queued-media .queued-top .add-media-layout .start-time #youtube-link-start-time, main .queued-media .queued-top .add-media-layout .name #youtube-link-title {
+  background-color: #09161D;
+  border: none;
+  outline: none;
+  border-radius: 1rem;
+  padding: 0.3rem;
+  color: white;
+}
+
+main .previous-media .all-previous-media::-webkit-scrollbar, main .queued-media .all-media::-webkit-scrollbar {
+  width: 1rem;
+}
+main .previous-media .all-previous-media::-webkit-scrollbar-thumb, main .queued-media .all-media::-webkit-scrollbar-thumb {
+  background-color: #17242D;
+  border-radius: 1rem;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #17242D;
+  font-family: "Maven Pro", sans-serif;
+  font-weight: 600;
+  color: white;
+}
+
+.hidden {
+  display: none;
+}
+
+main {
+  padding: 1rem;
+}
+main .view-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #09161D;
+  padding: 1rem 2rem;
+  height: 20rem;
+  border-radius: 1rem;
+}
+main .view-bar .playing-view {
+  width: 25rem;
+}
+main .view-bar .playing-view img {
+  width: 100%;
+}
+main .view-bar .current-info .current-title {
+  padding: 0.2rem;
+}
+main .view-bar .control-view {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+}
+main .view-bar .control-view .controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 2rem;
+}
+main .view-bar .control-view .controls .backward,
+main .view-bar .control-view .controls .forward,
+main .view-bar .control-view .controls .playing {
+  fill: #878E92;
+  transition: 0.2s;
+}
+main .view-bar .control-view .controls .backward svg,
+main .view-bar .control-view .controls .forward svg,
+main .view-bar .control-view .controls .playing svg {
+  width: 1.5rem;
+}
+main .view-bar .control-view .controls .backward:hover,
+main .view-bar .control-view .controls .forward:hover,
+main .view-bar .control-view .controls .playing:hover {
+  fill: #6d7579;
+  cursor: pointer;
+}
+main .view-bar .control-view .controls .playing svg {
+  width: 1.8rem;
+}
+main .view-bar .control-view .playing-bar {
+  flex-basis: 50%;
+}
+main .queued-media {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+main .queued-media .queued-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #878E92;
+  padding-bottom: 1rem;
+}
+main .queued-media .queued-top .queued-control-media {
+  display: flex;
+  gap: 1rem;
+}
+main .queued-media .queued-top .queued-control-media .queued-add,
+main .queued-media .queued-top .queued-control-media .queued-remove {
+  cursor: pointer;
+}
+main .queued-media .queued-top .add-media-layout {
+  background-color: #17242D;
+  position: fixed;
+  z-index: 100;
+  padding: 1rem;
+  border-radius: 1rem;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  display: none;
+}
+main .queued-media .queued-top .add-media-layout-title {
+  font-size: 1.5rem;
+}
+main .queued-media .queued-top .add-media-layout .name {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+main .queued-media .queued-top .add-media-layout .start-time {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+main .queued-media .queued-top .add-media-layout .duration {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+main .queued-media .queued-top .add-media-layout .buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+main .queued-media .queued-top .add-media-layout .buttons button {
+  padding: 0.7rem;
+  background-color: #09161D;
+  color: white;
+  border: none;
+  outline: none;
+  border-radius: 0.5rem;
+  transition: 0.2s;
+}
+main .queued-media .queued-top .add-media-layout .buttons button:hover {
+  cursor: pointer;
+  background-color: #51f1c1;
+}
+main .queued-media .all-media {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 13rem;
+  overflow-y: scroll;
+}
+main .queued-media .all-media .media-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+main .queued-media .all-media .media-bar .right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+main .queued-media .all-media .media-bar .right .media-title-duration {
+  font-size: 0.8rem;
+}
+main .queued-media .all-media > div:first-child {
+  background-color: rgba(135, 142, 146, 0.1568627451);
+}
+main .previous-media {
+  padding: 1rem;
+}
+main .previous-media .previous-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #878E92;
+  padding-bottom: 1rem;
+}
+main .previous-media .all-previous-media {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  height: 13rem;
+  overflow-y: scroll;
+}
+main .previous-media .all-previous-media .previous-media-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+main .previous-media .all-previous-media .previous-media-bar .right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+main .previous-media .all-previous-media .previous-media-bar .right .media-title-duration {
+  font-size: 0.8rem;
+}
+main .previous-media .all-previous-media > div:first-child {
+  background-color: rgba(135, 142, 146, 0.1568627451);
+}
+
+.backshadow {
+  display: none;
+  background-color: rgba(0, 0, 0, 0.445);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  z-index: 99;
+}
+
+/*# sourceMappingURL=style.css.map */

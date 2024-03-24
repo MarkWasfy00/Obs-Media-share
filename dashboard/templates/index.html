@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+</head>
+<body>
+    <main>
+        <section class="view-bar">
+            <div class="playing-view">
+                <video id="player" playsinline controls>
+                    <source src="" type="video/mp4"> <!-- Empty source -->
+                    Your browser does not support HTML5 video.
+                  </video>
+            </div>
+            <div class="control-view">
+                <div class="controls">
+                    <div class="backward">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M459.5 440.6c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4L288 214.3V256v41.7L459.5 440.6zM256 352V256 128 96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4l-192 160C4.2 237.5 0 246.5 0 256s4.2 18.5 11.5 24.6l192 160c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V352z"/></svg>
+                    </div>
+                    <div class="playing" id="startBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>
+                    </div>
+                    <div class="forward">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M52.5 440.6c-9.5 7.9-22.8 9.7-34.1 4.4S0 428.4 0 416V96C0 83.6 7.2 72.3 18.4 67s24.5-3.6 34.1 4.4L224 214.3V256v41.7L52.5 440.6zM256 352V256 128 96c0-12.4 7.2-23.7 18.4-29s24.5-3.6 34.1 4.4l192 160c7.3 6.1 11.5 15.1 11.5 24.6s-4.2 18.5-11.5 24.6l-192 160c-9.5 7.9-22.8 9.7-34.1 4.4s-18.4-16.6-18.4-29V352z"/></svg>
+                    </div>
+                </div>
+                <div class="playing-bar"></div>
+                <div class="volume"></div>
+            </div>
+        </section>
+        <section class="queued-media">
+            <div class="queued-top">
+                <div class="queue-title">Queued Media</div>
+                <div class="queued-control-media">
+                    <div class="queued-add">Add Media</div>
+                    <div class="queued-remove">Remove All</div>
+                </div>
+                <div class="add-media-layout">
+                    <div class="add-media-layout-title">Add Media</div>
+                    <div class="name">
+                        <div class="youtube-link-title">Enter the full youtube link of the Media you would like to add.</div>
+                        <input id="youtube-link-title" type="text">
+                    </div>
+                    <div class="start-time">
+                        <div class="youtube-link-start-time">Enter the start time.</div>
+                        <input id="youtube-link-start-time" type="text">
+                    </div>
+                    <div class="duration">
+                        <div class="youtube-link-duration">Duration (seconds)</div>
+                        <input id="youtube-link-duration" type="text">
+                    </div>
+                    <div class="buttons">
+                        <button class="add-video">Add</button>
+                        <button class="cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            <div class="all-media"></div>
+            <div class="media-bar hidden">
+                <div class="right">
+                    <div class="media-title-bar">TITLE</div>
+                    <div class="media-title-duration">for 60 seconds</div>
+                </div>
+                <div class="left">
+                    <div class="media-title-remove">x</div>
+                </div>
+            </div>
+        </section>
+        <section class="previous-media">
+            <div class="previous-top">
+                <div class="previous-title">Previous Media</div>
+            </div>
+            <div class="all-previous-media"></div>
+            <div class="previous-media-bar hidden">
+                <div class="right">
+                    <div class="media-title-bar">TITLE</div>
+                    <div class="media-title-duration">for 60 seconds</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="backshadow"></div>
+    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js" integrity="sha512-luMnTJZ7oEchNDZAtQhgjomP1eZefnl82ruTH/3Oj/Yu5qYtwL7+dVRccACS/Snp1lFXq188XFipHKYE75IaQQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js" integrity="sha512-vONptKEoKbP1gaC5UkbYDa9OPr04ur4bxaaqT7DAJxGHB2oogtseCPrl5e5hPFokGYotlGNV4d+GM593ka7iNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{{ url_for('static', filename='javascript/main.js') }}"></script>
+</body>
+</html>
