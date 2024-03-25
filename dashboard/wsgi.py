@@ -1,10 +1,11 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 from backend.module import Backend
-
+from flask_cors import CORS
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+CORS(app)  # Enable CORS for all routes
+socketio = SocketIO(app)
 server = Backend()
 
 
@@ -100,12 +101,6 @@ def handle_disconnect():
 
 
 if __name__ == '__main__':
-    host = "0.0.0.0"
-    port = 5000
-
-    
-    # Assuming you have created the Flask app and initialized the SocketIO object
-    # socketio.run() should be called after the Flask app and SocketIO object are initialized
-    socketio.run(app, host=host, port=port, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app)
 
     

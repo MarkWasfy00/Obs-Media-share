@@ -29,6 +29,10 @@ const RemoveAllQueuedBtn = document.querySelector(".queued-remove")
 let socket = io.connect('http://localhost:5000');
 
 
+socket.on('connect', function() {
+  console.log('Connected from server');
+});
+
 socket.on('handle-queued-data', function(data) {
   update_queued_data(data)
 });
