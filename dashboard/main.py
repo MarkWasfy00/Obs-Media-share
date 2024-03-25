@@ -101,7 +101,7 @@ def handle_disconnect():
 
 if __name__ == '__main__':
     host = "0.0.0.0"
-    port = 9090
+    port = 5000
 
     print(f"Flask is running at http://{host}:{port}")
     
