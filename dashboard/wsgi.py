@@ -1,11 +1,10 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 from backend.module import Backend
-from flask_cors import CORS
+
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 server = Backend()
 
 
@@ -101,20 +100,6 @@ def handle_disconnect():
 
 
 if __name__ == '__main__':
-    import tornado.web
-    import tornado.ioloop
-    import tornado.httpserver
-    from tornado.wsgi import WSGIContainer
+    socketio.run(app)
+
     
-    # Create a Tornado application
-    tornado_app = tornado.web.Application([
-        (r'/socket.io/', socketio.get_tornado_handler()),
-        (r'/', WSGIContainer(app))
-    ])
-
-    # Create Tornado server
-    server = tornado.httpserver.HTTPServer(tornado_app)
-    server.listen(5000)  # Change the port as needed
-
-    # Start Tornado event loop
-    tornado.ioloop.IOLoop.current().start()

@@ -228,6 +228,14 @@ addVideoBtn.addEventListener('click', function() {
   const videoDuration = addVideoDuration.value
   const videoStartTime = addVideoStartTime.value
 
+  if (addVideoDuration.value  == 0) {
+    videoDuration = 0
+  }
+
+  if (addVideoStartTime.value  == 0) {
+    videoStartTime = 0
+  }
+
   socket.emit("add-media", videoLink, videoDuration, videoStartTime)
   clearInputsAndHideShadow()
 })
