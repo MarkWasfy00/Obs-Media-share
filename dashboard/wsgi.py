@@ -101,6 +101,20 @@ def handle_disconnect():
 
 
 if __name__ == '__main__':
-    socketio.run(app)
-
+    import tornado.web
+    import tornado.ioloop
+    import tornado.httpserver
+    from tornado.wsgi import WSGIContainer
     
+    # Create a Tornado application
+    tornado_app = tornado.web.Application([
+        (r'/socket.io/', socketio.get_tornado_handler()),
+        (r'/', WSGIContainer(app))
+    ])
+
+    # Create Tornado server
+    server = tornado.httpserver.HTTPServer(tornado_app)
+    server.listen(5000)  # Change the port as needed
+
+    # Start Tornado event loop
+    tornado.ioloop.IOLoop.current().start()
