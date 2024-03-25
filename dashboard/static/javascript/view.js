@@ -1,4 +1,4 @@
-let socket = io.connect('http://localhost:5000');
+let socket = io.connect('http://85.239.240.70:5000');
 let player = new Plyr('#player', {controls: []});
 
 function extractYouTubeVideoCode(url) {

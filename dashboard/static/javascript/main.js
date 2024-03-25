@@ -26,7 +26,7 @@ const backwardBtn = document.querySelector(".backward")
 const iframeVideo = document.querySelector("#iframe-video")
 const RemoveAllQueuedBtn = document.querySelector(".queued-remove")
 
-let socket = io.connect('http://localhost:5000');
+let socket = io.connect('http://85.239.240.70:5000');
 
 
 socket.on('connect', function() {
@@ -224,9 +224,9 @@ startBtn.addEventListener('click', function() {
 });
 
 addVideoBtn.addEventListener('click', function() {
-  const videoLink = addVideoLink.value
-  const videoDuration = addVideoDuration.value
-  const videoStartTime = addVideoStartTime.value
+  let videoLink = addVideoLink.value
+  let videoDuration = addVideoDuration.value
+  let videoStartTime = addVideoStartTime.value
 
   if (addVideoDuration.value  == 0) {
     videoDuration = 0
