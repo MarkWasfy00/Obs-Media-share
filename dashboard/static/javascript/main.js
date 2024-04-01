@@ -1,12 +1,5 @@
 let player = new Plyr('#player', {controls: []});
 
-// player.on('ready', () => {
-//   updatePlayerProgressBar()
-
-// });
-// player.on('play', updateStartButtonIcon);
-// player.on('pause', updateStartButtonIcon);
-
 // Get references to the buttons and the progress bar
 const startBtn = document.getElementById('startBtn');
 const backShadow = document.querySelector(".backshadow")
@@ -25,8 +18,18 @@ const forwardBtn = document.querySelector(".forward")
 const backwardBtn = document.querySelector(".backward")
 const iframeVideo = document.querySelector("#iframe-video")
 const RemoveAllQueuedBtn = document.querySelector(".queued-remove")
+const checkbox = document.querySelector('input[type="checkbox"]')
+const clearHistory = document.querySelector(".previous-remove")
+const totalQueuedTime = document.querySelector(".queue-total-time")
 
-let socket = io.connect('http://85.239.240.70:5000');
+let socket = io.connect('http://localhost:5000');
+
+
+new Sortable(allMediaHolder, {
+  onEnd: function (evt) {
+    handleDragEnd(evt);
+  }
+});
 
 
 socket.on('connect', function() {
@@ -42,13 +45,11 @@ socket.on('handle-previous-data', function(data) {
 });
 
 socket.on('handle-current-data', function(data) {
-  updatePlayerItself(data["URL"], data["duration"], data["start_time"])
-});
-
-socket.on('handle-video', function(data) {
-  updatePlayerItself(data["current_video"]["URL"], data["current_video"]["duration"], data["current_video"]["start_time"])
-  update_queued_data(data["queued_media"])
-  update_previous_data(data["previous_media"])
+  if (Object.keys(data).length !== 0) {
+    updatePlayerItself(data["URL"], data["duration"], data["start_time"])
+  } else {
+    showBlankVideo()
+  }
 })
 
 socket.on('disconnect', function() {
@@ -57,14 +58,115 @@ socket.on('disconnect', function() {
 
 
 
-
-
 // Functions ---->
+
+function secondsToHumanReadable(seconds) {
+  if (isNaN(seconds) || seconds < 0) {
+      return "Invalid input";
+  }
+
+  let days = Math.floor(seconds / (24 * 60 * 60));
+  let hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+  let minutes = Math.floor((seconds % (60 * 60)) / 60);
+  let remainingSeconds = seconds % 60;
+
+  let result = "";
+
+  if (days > 0) {
+      result += days + (days === 1 ? " day" : " days");
+      if (hours > 0 || minutes > 0 || remainingSeconds > 0) {
+          result += " and ";
+      }
+  }
+
+  if (hours > 0) {
+      result += hours + (hours === 1 ? " hour" : " hours");
+      if (minutes > 0 || remainingSeconds > 0) {
+          result += " and ";
+      }
+  }
+
+  if (minutes > 0) {
+      result += minutes + (minutes === 1 ? " minute" : " minutes");
+      if (remainingSeconds > 0) {
+          result += " and ";
+      }
+  }
+
+  if (remainingSeconds > 0) {
+      result += remainingSeconds + (remainingSeconds === 1 ? " second" : " seconds");
+  }
+
+  return result;
+}
+
+function setCookie(name, value, days) {
+  let expires = "";
+  if (days) {
+    let date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    expires = "; expires=" + date.toUTCString();
+  }
+  document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+function getCookie(name) {
+  let nameEQ = name + "=";
+  let ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
+
+function handleCheckboxChange() {
+  setCookie('autoplay', checkbox.checked, 30); // Save the state in a cookie for 30 days
+}
+
+function checkCheckboxState() {
+  let checkboxState = getCookie('autoplay');
+  if (checkboxState) {
+    checkbox.checked = checkboxState === 'true';
+  }
+}
+
+function handleDragEnd(evt) {
+  let newArray = []
+  Array.from(allMediaHolder.children).forEach(function(child) {
+    itmId = parseInt(child.getAttribute("data-id"))
+    newArray.push(itmId)
+  })
+  socket.emit("new-sequence", newArray)
+}
+
 function updateStartButtonIcon () {
   if (player.paused) {
       startBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>`;
   } else {
       startBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/></svg>`;
+  }
+}
+
+function DetectVideoType(youtubeLink) {
+  // Regular expression to match YouTube playlist URLs
+  const playlistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:[^\/\n\s]+\/)*(?:playlist\?|watch\?.*?list=)([a-zA-Z0-9_-]+)/;
+
+  // Regular expression to match YouTube video URLs
+  const videoRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/)*(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/;
+
+  // Regular expression to match YouTube short video URLs
+  const shortVideoRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/;
+
+  if (playlistRegex.test(youtubeLink)) {
+    return "Playlist";
+  } else if (shortVideoRegex.test(youtubeLink)) {
+    return "Short Video";
+  } else if (videoRegex.test(youtubeLink)) {
+    return "Normal Video";
+  } else {
+    return "Unknown";
   }
 }
 
@@ -105,18 +207,34 @@ function extractYouTubeVideoCode(url) {
 
 function update_queued_data(data) {
   allMediaHolder.innerHTML = ""
+  let totalTime = 0
   for (let key in data) {
     const vid = data[key]
     const newMediaEntry  = mediaQueueDummy.cloneNode(true)
     newMediaEntry.classList.remove('hidden');
+    newMediaEntry.setAttribute("data-id", `${key}`);
     
     const newMediaTitle = newMediaEntry.querySelector(".media-title-bar")
     const newMediaDuration = newMediaEntry.querySelector(".media-title-duration")
+    const newRemoveMedia = newMediaEntry.querySelector(".media-title-remove")
+    
 
     newMediaTitle.innerHTML  = vid["title"]
-    newMediaDuration.innerHTML = `for ${vid["duration"]} seconds`
+    if (parseInt(vid["duration"])) {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["duration"])}`
+      totalTime += vid["duration"]
+    } else {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["video_length"])}`
+      totalTime += vid["video_length"]
+    }
+    
+    newRemoveMedia.addEventListener("click", function(event) {
+      socket.emit("remove-video", key)
+    })
+    
     allMediaHolder.appendChild(newMediaEntry)
   }
+  totalQueuedTime.innerHTML = `${secondsToHumanReadable(totalTime)}`
 }
 
 function update_previous_data(data) {
@@ -130,7 +248,13 @@ function update_previous_data(data) {
     const newMediaDuration = newMediaEntry.querySelector(".media-title-duration")
 
     newMediaTitle.innerHTML  = vid["title"]
-    newMediaDuration.innerHTML = `for ${vid["duration"]} seconds`
+
+    if (parseInt(vid["duration"])) {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["duration"])}`
+    } else {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["video_length"])}`
+    }
+
     AllPreviousMediaHolder.appendChild(newMediaEntry)
   }
 }
@@ -156,6 +280,11 @@ function updatePlayerItself(newYouTubeLink, duration, startTime) {
     socket.emit("time-signal-dash", currentTime);
   });
 
+  player.on('seeking', event => {
+    const currentTime = player.currentTime;
+    socket.emit("time-signal-dash", currentTime);
+  });
+
   player.on('volumechange', event => {
     // Print 'Hello' when the volume changes
     const volume =  player.volume 
@@ -176,9 +305,6 @@ function updatePlayerItself(newYouTubeLink, duration, startTime) {
       hasInitialized = true;
     }
     updatePlayerProgressBar();
-    
-  
-  
   });
 
   player.on('play', event => {
@@ -186,10 +312,78 @@ function updatePlayerItself(newYouTubeLink, duration, startTime) {
     updateStartButtonIcon()
     socket.emit("time-signal-dash", currentTime);
   });
+
   
-  player.on('pause', updateStartButtonIcon);
+  player.on('timeupdate', event => {
+    if (!player.paused) {
+      const currentTime = player.currentTime;
+      // Check if the current time exceeds the expected duration
+      if (parseInt(duration) && parseInt(startTime)) {
+        if (currentTime >= (parseInt(duration) + parseInt(startTime))) {
+            if (checkbox.checked) {
+                socket.emit("next-video", "SEND")
+                setTimeout(()=> {
+                    player.play();
+                    socket.emit("play-signal-dash", "PLAY")
+                }, 2000)
+            } else {
+              socket.emit("next-video", "SEND")
+            }
+        }
+      }
+  }
+  
+    // You can perform any other actions based on the current time here
+  });
+ 
+
+  player.on('ended', event => {
+    if (checkbox.checked && parseInt(duration) == 0 && parseInt(startTime) == 0) {
+      socket.emit("next-video", "SEND")
+      setTimeout(()=> {
+        player.play();
+        socket.emit("play-signal-dash", "PLAY")
+      }, 2000)
+    } else {
+      socket.emit("next-video", "SEND")
+    }
+  });
+
+  player.on('pause', event => {
+    updateStartButtonIcon()
+  });
 
 
+}
+
+function timeToSeconds(timeString) {
+  const timeParts = timeString.split(':').map(part => parseInt(part));
+  let seconds = 0;
+
+  // Add hours if provided
+  if (timeParts.length === 3) {
+      seconds += timeParts[0] * 3600; // 1 hour = 3600 seconds
+      timeParts.shift(); // Remove hours from array
+  }
+
+  // Add minutes if provided
+  if (timeParts.length >= 2) {
+      seconds += timeParts[0] * 60; // 1 minute = 60 seconds
+      timeParts.shift(); // Remove minutes from array
+  }
+
+  // Add remaining seconds if provided
+  if (timeParts.length === 1) {
+      seconds += timeParts[0];
+  }
+
+  return seconds;
+}
+
+function showBlankVideo() {
+  player.destroy()
+  player = new Plyr('#player', { controls: [] });
+  socket.emit("show-blank-video-dash", "SEND")
 }
 
 function updatePlayerProgressBar() {
@@ -212,6 +406,16 @@ function updatePlayerProgressBar() {
   } catch {}
 }
 
+function updatePlayAndPauseBtn() {
+  if (player.paused) {
+    player.play(); // Play the video if it's paused
+    socket.emit("play-signal-dash", "PLAY")
+  } else {
+      player.pause(); // Otherwise, pause the video
+      socket.emit("pause-signal-dash", "PLAY")
+  }
+}
+
 //event listeners
 startBtn.addEventListener('click', function() {
   if (player.paused) {
@@ -229,14 +433,20 @@ addVideoBtn.addEventListener('click', function() {
   let videoStartTime = addVideoStartTime.value
 
   if (addVideoDuration.value  == 0) {
-    videoDuration = 0
+    videoDuration = "0"
   }
 
   if (addVideoStartTime.value  == 0) {
-    videoStartTime = 0
+    videoStartTime = "0"
   }
 
-  socket.emit("add-media", videoLink, videoDuration, videoStartTime)
+  
+  if (DetectVideoType(videoLink) == "Playlist") {
+    socket.emit("add-playlist-media", videoLink)
+  } else {
+    socket.emit("add-media", videoLink, timeToSeconds(videoDuration), timeToSeconds(videoStartTime))
+  }
+
   clearInputsAndHideShadow()
 })
 
@@ -250,8 +460,15 @@ backwardBtn.addEventListener("click", function() {
 
 RemoveAllQueuedBtn.addEventListener("click", function() {
   socket.emit("remove-all-queued-video", "SEND")
+  showBlankVideo()
 })
 
+clearHistory.addEventListener("click", function() {
+  socket.emit("remove-history", "SEND")
+})
+
+window.addEventListener('load', checkCheckboxState);
+checkbox.addEventListener('change', handleCheckboxChange);
 addMediaBtn.addEventListener('click', showBackShadowAndAddView)
 cancelVideoBtn.addEventListener('click', hideBackShadowAndAddView)
 backShadow.addEventListener('click', hideBackShadowAndAddView)

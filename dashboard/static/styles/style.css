@@ -11,7 +11,7 @@ main .previous-media .all-previous-media::-webkit-scrollbar, main .queued-media 
   width: 1rem;
 }
 main .previous-media .all-previous-media::-webkit-scrollbar-thumb, main .queued-media .all-media::-webkit-scrollbar-thumb {
-  background-color: #17242D;
+  background-color: #09161D;
   border-radius: 1rem;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
@@ -42,14 +42,88 @@ main .view-bar {
   justify-content: space-between;
   background-color: #09161D;
   padding: 1rem 2rem;
-  height: 20rem;
   border-radius: 1rem;
 }
-main .view-bar .playing-view {
+main .view-bar .views-and-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+main .view-bar .views-and-buttons .playing-view {
   width: 25rem;
 }
-main .view-bar .playing-view img {
+main .view-bar .views-and-buttons .playing-view img {
   width: 100%;
+}
+main .view-bar .views-and-buttons .checkbox {
+  position: absolute;
+  height: 10rem;
+  width: 10rem;
+  top: 2rem;
+  right: 2rem;
+}
+main .view-bar .views-and-buttons .checkbox .checkbox-title-top {
+  color: white;
+  position: absolute;
+  top: 3.5rem;
+  right: 1.5rem;
+  width: 5rem;
+  text-transform: capitalize;
+}
+main .view-bar .views-and-buttons .checkbox input[type=checkbox] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+  cursor: pointer;
+  outline: none;
+  height: 3.6em;
+  width: 10.5em;
+  background-color: #000000;
+  -webkit-transform: skewX(-7deg);
+  -ms-transform: skewX(-7deg);
+  transform: skewX(-7deg);
+  -webkit-transition: 0.3s;
+  -o-transition: 0.3s;
+  transition: 0.3s;
+}
+main .view-bar .views-and-buttons .checkbox input[type=checkbox]:before {
+  font-size: 1.5em;
+  content: "OFF";
+  position: absolute;
+  width: 2.75em;
+  height: 1.9em;
+  background-color: #17242D;
+  color: white;
+  top: 0.25em;
+  left: 0.42em;
+  -webkit-transition: 0.3s;
+  -o-transition: 0.3s;
+  transition: 0.3s;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+main .view-bar .views-and-buttons .checkbox input[type=checkbox]:checked {
+  background: #80F5D2;
+}
+main .view-bar .views-and-buttons .checkbox input[type=checkbox]:checked:before {
+  content: "ON";
+  left: 4.1em;
+  color: white;
 }
 main .view-bar .current-info .current-title {
   padding: 0.2rem;
@@ -102,6 +176,16 @@ main .queued-media .queued-top {
   align-items: center;
   border-bottom: 1px solid #878E92;
   padding-bottom: 1rem;
+}
+main .queued-media .queued-top .queued-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+main .queued-media .queued-top .queued-info .queue-time {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8rem;
 }
 main .queued-media .queued-top .queued-control-media {
   display: flex;
@@ -173,14 +257,22 @@ main .queued-media .all-media .media-bar {
   justify-content: space-between;
   padding: 1rem;
   border-radius: 1rem;
+  cursor: grab;
 }
 main .queued-media .all-media .media-bar .right {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
+main .queued-media .all-media .media-bar .right .media-holding-bar {
+  width: 0.7rem;
+  fill: white;
+}
 main .queued-media .all-media .media-bar .right .media-title-duration {
   font-size: 0.8rem;
+}
+main .queued-media .all-media .media-bar .left .media-title-remove {
+  cursor: pointer;
 }
 main .queued-media .all-media > div:first-child {
   background-color: rgba(135, 142, 146, 0.1568627451);
@@ -194,6 +286,9 @@ main .previous-media .previous-top {
   align-items: center;
   border-bottom: 1px solid #878E92;
   padding-bottom: 1rem;
+}
+main .previous-media .previous-top .previous-control-media .previous-remove {
+  cursor: pointer;
 }
 main .previous-media .all-previous-media {
   display: flex;

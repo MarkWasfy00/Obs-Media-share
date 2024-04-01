@@ -23,7 +23,7 @@ $theme: #878E92;
         }
 
         &-thumb {
-            background-color: $background;
+            background-color: $primary;
             border-radius: 1rem;
             box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 
@@ -60,15 +60,99 @@ main {
         justify-content: space-between;
         background-color: $primary;
         padding: 1rem 2rem;
-        height: 20rem;
+        // height: 20rem;
         border-radius: 1rem;
 
-        .playing-view {
-            width: 25rem;
-            img {
-                width: 100%;
 
+        .views-and-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            
+            .playing-view {
+                width: 25rem;
+                img {
+                    width: 100%;
+
+                }
             }
+
+
+           .checkbox {
+                position: absolute;
+                height: 10rem;
+                width: 10rem;
+                top: 2rem;
+                right: 2rem;
+                
+
+
+            .checkbox-title-top {
+                color: white;
+                position: absolute;
+                top: 3.5rem;
+                right: 1.5rem;
+                width: 5rem;
+                text-transform: capitalize;
+            }
+
+            input[type="checkbox"] {
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                margin: auto;
+                position: absolute;
+                
+                right: 0;
+                top: 0;
+                cursor: pointer;
+                outline: none;
+                height: 3.6em;
+                width: 10.5em;
+                background-color: #000000;
+                -webkit-transform: skewX(-7deg);
+                -ms-transform: skewX(-7deg);
+                transform: skewX(-7deg);
+                -webkit-transition: 0.3s;
+                -o-transition: 0.3s;
+                transition: 0.3s;
+            }
+            input[type="checkbox"]:before {
+                font-size: 1.5em;
+                content: "OFF";
+                position: absolute;
+                width: 2.75em;
+                height: 1.9em;
+                background-color: $background;
+                color: white;
+                top: 0.25em;
+                left: 0.42em;
+                -webkit-transition: 0.3s;
+                -o-transition: 0.3s;
+                transition: 0.3s;
+                display: -webkit-box;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-align: center;
+                -ms-flex-align: center;
+                align-items: center;
+                -webkit-box-pack: center;
+                -ms-flex-pack: center;
+                justify-content: center;
+                font-family: "Poppins", sans-serif;
+                font-weight: 600;
+                letter-spacing: 1px;
+            }
+            input[type="checkbox"]:checked {
+                background: $secondary;
+            }
+            input[type="checkbox"]:checked:before {
+                content: "ON";
+                left: 4.1em;
+                color: white;
+            }
+           }
         }
 
         .current-info {
@@ -138,6 +222,19 @@ main {
             align-items: center;
             border-bottom: 1px solid $theme;
             padding-bottom: 1rem;
+
+
+            .queued-info {
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+
+                .queue-time {
+                    display:  flex;
+                    gap: .5rem;
+                    font-size: .8rem;
+                }
+            }
 
             .queued-control-media {
                 display: flex;
@@ -229,7 +326,7 @@ main {
                 justify-content: space-between;
                 padding: 1rem;
                 border-radius: 1rem;
-                
+                cursor: grab;
 
                 
                 
@@ -237,13 +334,21 @@ main {
                     display: flex;
                     align-items: center;
                     gap: 1rem;
+
+                    .media-holding-bar {
+                        width: .7rem;
+                        fill: white;
+                    }
+
                     .media-title-duration {
                         font-size: .8rem;
                     }
                 }
 
                 .left {
-
+                    .media-title-remove {
+                        cursor: pointer;
+                    }
                 }
             }
 
@@ -264,6 +369,12 @@ main {
             align-items: center;
             border-bottom: 1px solid $theme;
             padding-bottom: 1rem;
+
+            .previous-control-media {
+                .previous-remove {
+                    cursor: pointer;
+                }
+            }
         }
 
         .all-previous-media {
