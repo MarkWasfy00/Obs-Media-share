@@ -22,7 +22,7 @@ const checkbox = document.querySelector('input[type="checkbox"]')
 const clearHistory = document.querySelector(".previous-remove")
 const totalQueuedTime = document.querySelector(".queue-total-time")
 
-let socket = io.connect('http://localhost:5000');
+let socket = io.connect('http://85.239.240.70:5000');
 
 
 new Sortable(allMediaHolder, {
