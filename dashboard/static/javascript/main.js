@@ -326,8 +326,10 @@ function updatePlayerItself(newYouTubeLink, duration, startTime) {
                     player.play();
                     socket.emit("play-signal-dash", "PLAY")
                 }, 2000)
-            } else {
+            } else if (currentTime <= (parseInt(duration) + parseInt(startTime))) {
               socket.emit("next-video", "SEND")
+            } else {
+              console.log("Exited Loop");
             }
         }
       }
