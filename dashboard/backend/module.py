@@ -78,6 +78,7 @@ class Backend:
             video_data = self.__load_data(self.VIDEO_DATA_FILE)
             new_id = str(max(map(int, video_data.keys()), default=0) + 1)
             video_data[new_id] = {
+                "TYPE" :"STANDARD",
                 "URL": ulrStartTime,
                 "title": title or "NONE",
                 "duration": duration,
@@ -115,6 +116,7 @@ class Backend:
         try:
             video_data = self.__load_data(self.VIDEO_DATA_FILE)
             if self.currentVideo != {}:
+                print("here")
                 self.__add_to_history(self.currentVideo)
             if not(video_data):
                 self.currentVideo = {}
@@ -239,16 +241,47 @@ class Backend:
         except Exception as e:
             print(f"An error occurred while changing the video order: {e}")
             return video_data,len(video_data)
-        
 
+    def replay(self, video_id_int):
+        try:
+            video_id = str(video_id_int)
+            # Load data from history and video data files
+            history_data = self.__load_data(self.HISTORY_FILE)
+            video_data = self.__load_data(self.VIDEO_DATA_FILE)
 
+            # Check if the video exists in history
+            if video_id in history_data:
+                # Get the video from history
+                replay_video = history_data[video_id]
 
-# def update(video_data,data_length,totalTime):   this is ur update fucntion 
-#     print(video_data)
-#     print(data_length)
-#     print(totalTime)
+                # Find the first available ID in video data
+                new_id = str(max(map(int, video_data.keys()), default=0) + 1)
 
+                # Shift all existing videos down by one index in video data
+                for i in range(len(video_data), 0, -1):
+                    video_data[str(i + 1)] = video_data[str(i)]
 
+                # Add the replayed video to video data at the first ID
+                video_data["1"] = replay_video
+                self.totalTime += replay_video["video_length"]
 
-# backend=Backend()
-# backend.add_playlist("https://www.youtube.com/playlist?list=PLknTfszPj5eo6QKixI-DD2rarS3a8V0Y2",update)
+                # Shift down subsequent videos in history if their ID is greater than the replayed video ID
+                for i in range(int(video_id), len(history_data)):
+                    history_data[str(i)] = history_data[str(i + 1)]
+
+                # Remove the last video from history
+                del history_data[str(len(history_data))]
+                # Save the updated data
+                self.__save_data(video_data, self.VIDEO_DATA_FILE)
+                self.__save_data(history_data, self.HISTORY_FILE)
+
+                print(f"Video with ID {video_id} replayed successfully.")
+                return video_data , history_data
+
+            else:
+                print(f"No video found with ID {video_id} in history.")
+                return video_data , history_data
+
+        except Exception as e:
+            print(f"An error occurred while replaying the video: {e}")
+            return video_data , history_data

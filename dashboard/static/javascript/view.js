@@ -74,6 +74,7 @@ socket.on('pause-signal', function(data) {
 
 socket.on('time-signal', function(currentTime) {
   if (player) {
+    console.log(currentTime);
     player.seekTo(currentTime, true); // Set the current time in seconds
   }
 });

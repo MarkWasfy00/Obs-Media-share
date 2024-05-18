@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obs Media Share Review</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <link rel="shortcut icon" href="../static/assets/icon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/styles/style.css">
+    <link rel="stylesheet" href="../static/styles/review.css">
+</head>
+<body>
+    <main>
+        <section class="donated-media">
+            <div class="donated-top">
+                <div class="donated-extra">
+                    <div class="donated-extra-info">
+                        <div class="donated-time">
+                            <div class="donated-time-headline">Total time: </div>
+                            <div class="donated-total-time">0s</div>
+                        </div>
+                        <div>-</div>
+                        <div class="total-donated">
+                            <div class="donated-total-headline">Total In Queue: </div>
+                            <div class="donated-total-videos">0 videos</div>
+                        </div>
+                    </div>
+                    <div class="donated-control-media">
+                        <div class="donated-expand"><svg class="donated-expand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg></div>
+                    </div>
+                </div>
+            </div>
+            <div class="all-donated"></div>
+            <div class="donated-bar hidden">
+                <div class="right">
+                    <div class="donated-holding-bar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></div>
+                    
+                    <div class="donated-holding">
+                        <iframe
+                            src="https://www.youtube.com/embed/bTqVqk7FSmY?origin=https://plyr.io&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1"
+                            allowfullscreen
+                            allowtransparency
+                            allow="autoplay"
+                        ></iframe>
+                    </div>
+                    <div class="donated-title-bar">
+                        <div class="donation-title">TITLE</div>
+                        <a target="_blank" class="donation-url">from: url</a>
+                        <div class="donated-title-duration">for 60 seconds</div>
+                        <div class="donation-price">duration: 23s - price: 23$</div>
+                    </div>
+                </div>
+                <div class="left">
+                    <div class="donated-approve">✓</div>
+                    <div class="donated-deny">X</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <audio id="approve">
+        <source src="../static/assets/approve.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <audio id="deny">
+        <source src="../static/assets/deny.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <!-- <button class="xtest">Test</button> -->
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js" integrity="sha512-luMnTJZ7oEchNDZAtQhgjomP1eZefnl82ruTH/3Oj/Yu5qYtwL7+dVRccACS/Snp1lFXq188XFipHKYE75IaQQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="../static/javascript/review.js"></script>
+</body>
+</html>

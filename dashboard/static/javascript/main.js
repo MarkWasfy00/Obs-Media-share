@@ -1,6 +1,5 @@
 let player = new Plyr('#player', {controls: []});
 
-// Get references to the buttons and the progress bar
 const startBtn = document.getElementById('startBtn');
 const backShadow = document.querySelector(".backshadow")
 const addMediaBtn = document.querySelector(".queued-add")
@@ -9,7 +8,7 @@ const addVideoBtn = document.querySelector(".add-video")
 const addVideoLink = document.querySelector("#youtube-link-title")
 const addVideoDuration = document.querySelector("#youtube-link-duration")
 const addVideoStartTime = document.querySelector("#youtube-link-start-time")
-const cancelVideoBtn = document.querySelector(".cancel")
+const cancelBtns = document.querySelectorAll(".cancel")
 const mediaQueueDummy = document.querySelector(".media-bar")
 const allMediaHolder = document.querySelector(".all-media")
 const AllPreviousMediaHolder = document.querySelector(".all-previous-media")
@@ -21,9 +20,18 @@ const RemoveAllQueuedBtn = document.querySelector(".queued-remove")
 const checkbox = document.querySelector('input[type="checkbox"]')
 const clearHistory = document.querySelector(".previous-remove")
 const totalQueuedTime = document.querySelector(".queue-total-time")
+const expandableQueue = document.querySelector(".queued-expand-icon")
+const previousQueue = document.querySelector(".previous-expand-icon")
+const QueuedTotalVideos = document.querySelector(".queue-total-videos")
+const playingViewTitle = document.querySelector(".playing-title-now")
+const playingViewNow = document.querySelector(".playing-now")
+const playingViewUrl = document.querySelector(".playing-title-url")
+
 
 let socket = io.connect('http://85.239.240.70:5000');
-
+let isPausedFromUser = false;
+let currentDataLen = 0
+let queuedDataLen = 0
 
 new Sortable(allMediaHolder, {
   onEnd: function (evt) {
@@ -32,13 +40,28 @@ new Sortable(allMediaHolder, {
 });
 
 
+
 socket.on('connect', function() {
   console.log('Connected from server');
 });
 
 socket.on('handle-queued-data', function(data) {
-  update_queued_data(data)
+  currentDataLen = data[1]
+  queuedDataLen = Object.keys(data[0]).length
+
+  update_queued_data(data[0])
+
+  if (checkbox.checked) {
+    if (Object.keys(data[0]).length == 1 && data[1] == 0) {
+      socket.emit("next-video", "SEND")
+      setTimeout(()=> {
+        player.play();
+        socket.emit("play-signal-dash", "PLAY")
+      }, 2000)
+    }
+  }
 });
+
 
 socket.on('handle-previous-data', function(data) {
   update_previous_data(data)
@@ -46,11 +69,23 @@ socket.on('handle-previous-data', function(data) {
 
 socket.on('handle-current-data', function(data) {
   if (Object.keys(data).length !== 0) {
-    updatePlayerItself(data["URL"], data["duration"], data["start_time"])
+    updatePlayerItself(data["URL"], data["duration"], data["start_time"], data["video_length"])
+    updatePlayerInfo(data["title"] ,data["URL"])
   } else {
     showBlankVideo()
+    updatePlayerInfoBlank()
   }
 })
+
+socket.on('handle-resume-button', function(data) {
+  if (checkbox.checked && data != 0) {
+    setTimeout(()=> {
+      player.play();
+      socket.emit("play-signal-dash", "PLAY")
+    }, 2000)
+  }
+})
+
 
 socket.on('disconnect', function() {
     console.log('Disconnected from server');
@@ -59,7 +94,6 @@ socket.on('disconnect', function() {
 
 
 // Functions ---->
-
 function secondsToHumanReadable(seconds) {
   if (isNaN(seconds) || seconds < 0) {
       return "Invalid input";
@@ -123,6 +157,28 @@ function getCookie(name) {
 
 function handleCheckboxChange() {
   setCookie('autoplay', checkbox.checked, 30); // Save the state in a cookie for 30 days
+
+  if (checkbox.checked && queuedDataLen == 1 && player.paused) {
+    setTimeout(()=> {
+      player.play();
+      socket.emit("play-signal-dash", "PLAY")
+    }, 2000)
+  }
+
+  if (checkbox.checked && currentDataLen != 0 && player.paused) {
+    setTimeout(()=> {
+      player.play();
+      socket.emit("play-signal-dash", "PLAY")
+    }, 2000)
+  }
+  
+  if (checkbox.checked && currentDataLen == 0 && queuedDataLen > 0) {
+    socket.emit("next-video", "SEND")
+      setTimeout(()=> {
+        player.play();
+        socket.emit("play-signal-dash", "PLAY")
+      }, 2000)
+  }
 }
 
 function checkCheckboxState() {
@@ -174,9 +230,10 @@ function updateStartButtonIconFix () {
   startBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>`;
 }
 
-function hideBackShadowAndAddView () {
+function hideBackShadowAndViews () {
   backShadow.style.display = 'none'
   addVideoView.style.display = 'none'
+  // addTokenView.style.display = 'none'
 }
 
 function showBackShadowAndAddView () {
@@ -188,7 +245,7 @@ function clearInputsAndHideShadow () {
   addVideoLink.value = ""
   addVideoDuration.value = ""
   addVideoStartTime.value = ""
-  hideBackShadowAndAddView()
+  hideBackShadowAndViews()
 }
 
 function extractYouTubeVideoCode(url) {
@@ -218,15 +275,24 @@ function update_queued_data(data) {
     const newMediaDuration = newMediaEntry.querySelector(".media-title-duration")
     const newRemoveMedia = newMediaEntry.querySelector(".media-title-remove")
     
-
     newMediaTitle.innerHTML  = vid["title"]
-    if (parseInt(vid["duration"])) {
-      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["duration"])}`
-      totalTime += vid["duration"]
-    } else {
+
+    
+
+    if (!parseInt(vid["duration"]) && !parseInt(vid["start_time"])) {
       newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["video_length"])}`
-      totalTime += vid["video_length"]
+      totalTime += parseInt(vid["video_length"])
+    }  else if (parseInt(vid["duration"]) && !parseInt(vid["start_time"]) ) {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["duration"])}`
+      totalTime += parseInt(vid["duration"])
+    } else if (parseInt(vid["start_time"]) &&  !parseInt(vid["duration"])) {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable((parseInt(vid["video_length"]) - parseInt(vid["start_time"])))}`
+      totalTime += (parseInt(vid["video_length"]) - parseInt(vid["start_time"]))
+    } else {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["duration"])}`
+      totalTime += parseInt(vid["duration"])
     }
+
     
     newRemoveMedia.addEventListener("click", function(event) {
       socket.emit("remove-video", key)
@@ -234,7 +300,8 @@ function update_queued_data(data) {
     
     allMediaHolder.appendChild(newMediaEntry)
   }
-  totalQueuedTime.innerHTML = `${secondsToHumanReadable(totalTime)}`
+  QueuedTotalVideos.innerHTML = `${Object.keys(data).length ? Object.keys(data).length + " videos" : "0 videos"}`
+  totalQueuedTime.innerHTML = `${Object.keys(data).length ? secondsToHumanReadable(totalTime) : "0s"}`
 }
 
 function update_previous_data(data) {
@@ -246,27 +313,39 @@ function update_previous_data(data) {
     
     const newMediaTitle = newMediaEntry.querySelector(".media-title-bar")
     const newMediaDuration = newMediaEntry.querySelector(".media-title-duration")
+    const newMediaReadd = newMediaEntry.querySelector(".readd")
 
     newMediaTitle.innerHTML  = vid["title"]
 
-    if (parseInt(vid["duration"])) {
-      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["duration"])}`
-    } else {
+ 
+    if (!parseInt(vid["duration"]) && !parseInt(vid["start_time"])) {
       newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["video_length"])}`
+    }  else if (parseInt(vid["duration"]) && !parseInt(vid["start_time"]) ) {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["duration"])}`
+    } else if (parseInt(vid["start_time"]) &&  !parseInt(vid["duration"])) {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable((parseInt(vid["video_length"]) - parseInt(vid["start_time"])))}`
+    } else {
+      newMediaDuration.innerHTML = `for ${secondsToHumanReadable(vid["duration"])}`
     }
+    
+    newMediaReadd.addEventListener("click", function(event) {
+      socket.emit("read-video", key)
+    })
 
     AllPreviousMediaHolder.appendChild(newMediaEntry)
   }
 }
 
-function updatePlayerItself(newYouTubeLink, duration, startTime) {
+function updatePlayerItself(newYouTubeLink, duration, startTime, vidLength) {
   let hasInitialized = false;
+  let eventHandled = false;
+  
   let vidCode = extractYouTubeVideoCode(newYouTubeLink)
   player.destroy()
 
   player = new Plyr('#player', {
     controls: ['progress', 'volume'],
-    duration: (parseInt(startTime) + parseInt(duration)),
+    duration: (parseInt(duration) + parseInt(startTime)),
     youtube: {
       noCookie: true,
       start: parseInt(startTime),
@@ -281,12 +360,15 @@ function updatePlayerItself(newYouTubeLink, duration, startTime) {
   });
 
   player.on('seeking', event => {
-    const currentTime = player.currentTime;
-    socket.emit("time-signal-dash", currentTime);
+    if (isPausedFromUser) {
+      setTimeout(() => {
+        const currentTime = player.currentTime;
+        socket.emit("time-signal-dash", currentTime);
+      }, 2000)
+    }
   });
 
   player.on('volumechange', event => {
-    // Print 'Hello' when the volume changes
     const volume =  player.volume 
     socket.emit("volume-signal-dash", volume)
   });
@@ -303,6 +385,7 @@ function updatePlayerItself(newYouTubeLink, duration, startTime) {
         ]
       };
       hasInitialized = true;
+      // player.seek(parseInt(startTime));
     }
     updatePlayerProgressBar();
   });
@@ -312,35 +395,32 @@ function updatePlayerItself(newYouTubeLink, duration, startTime) {
     updateStartButtonIcon()
     socket.emit("time-signal-dash", currentTime);
   });
-
   
   player.on('timeupdate', event => {
-    if (!player.paused) {
-      const currentTime = player.currentTime;
-      // Check if the current time exceeds the expected duration
-      if (parseInt(duration) && parseInt(startTime)) {
-        if (currentTime >= (parseInt(duration) + parseInt(startTime))) {
-            if (checkbox.checked) {
-                socket.emit("next-video", "SEND")
-                setTimeout(()=> {
-                    player.play();
-                    socket.emit("play-signal-dash", "PLAY")
-                }, 2000)
-            } else if (currentTime <= (parseInt(duration) + parseInt(startTime))) {
-              socket.emit("next-video", "SEND")
-            } else {
-              console.log("Exited Loop");
-            }
-        }
-      }
-  }
+    const currentTime = player.currentTime;
   
-    // You can perform any other actions based on the current time here
+
+    if (!parseInt(duration) == 0) {
+      if (parseInt(currentTime) >= (parseInt(duration) + parseInt(startTime)) && !eventHandled) {
+        eventHandled = true
+        if (checkbox.checked) {
+            socket.emit("next-video", "SEND");
+            setTimeout(() => {
+                player.play();
+                socket.emit("play-signal-dash", "PLAY");
+            }, 2000);
+        } else {
+          socket.emit("next-video", "SEND");
+        }
+      } else if (parseInt(currentTime) < (parseInt(duration) + parseInt(startTime))) {
+        eventHandled = false
+      }
+    }
+
   });
- 
 
   player.on('ended', event => {
-    if (checkbox.checked && parseInt(duration) == 0 && parseInt(startTime) == 0) {
+    if (checkbox.checked) {
       socket.emit("next-video", "SEND")
       setTimeout(()=> {
         player.play();
@@ -358,25 +438,46 @@ function updatePlayerItself(newYouTubeLink, duration, startTime) {
 
 }
 
+function updatePlayerInfo(title, url) {
+  playingViewNow.innerHTML = `Now Playing`
+  playingViewTitle.innerHTML = `${title}`
+  playingViewUrl.innerHTML  = `from: ${url}`
+  playingViewUrl.setAttribute('href', `${url}`);
+}
+
+function updatePlayerInfoBlank() {
+  playingViewNow.innerHTML = ``
+  playingViewTitle.innerHTML = ``
+  playingViewUrl.innerHTML  = ``
+}
+
 function timeToSeconds(timeString) {
-  const timeParts = timeString.split(':').map(part => parseInt(part));
+  let timeParts;
+  if (timeString.includes(':')) {
+      timeParts = timeString.split(':').map(part => parseFloat(part));
+  } else if (timeString.includes('.')) {
+      timeParts = timeString.split('.').map(part => parseFloat(part));
+  } else {
+      timeParts = [parseFloat(timeString)];
+  }
+  
   let seconds = 0;
 
   // Add hours if provided
   if (timeParts.length === 3) {
-      seconds += timeParts[0] * 3600; // 1 hour = 3600 seconds
+      seconds += Math.floor(timeParts[0]) * 3600; // 1 hour = 3600 seconds
       timeParts.shift(); // Remove hours from array
   }
 
   // Add minutes if provided
   if (timeParts.length >= 2) {
-      seconds += timeParts[0] * 60; // 1 minute = 60 seconds
+      seconds += Math.floor(timeParts[0]) * 60; // 1 minute = 60 seconds
       timeParts.shift(); // Remove minutes from array
   }
 
   // Add remaining seconds if provided
   if (timeParts.length === 1) {
-      seconds += timeParts[0];
+      seconds += Math.floor(timeParts[0]);
   }
 
   return seconds;
@@ -411,23 +512,45 @@ function updatePlayerProgressBar() {
 function updatePlayAndPauseBtn() {
   if (player.paused) {
     player.play(); // Play the video if it's paused
+    isPausedFromUser = false
     socket.emit("play-signal-dash", "PLAY")
   } else {
-      player.pause(); // Otherwise, pause the video
-      socket.emit("pause-signal-dash", "PLAY")
+    player.pause(); // Otherwise, pause the video
+    isPausedFromUser = true
+    socket.emit("pause-signal-dash", "PLAY")
   }
 }
 
-//event listeners
-startBtn.addEventListener('click', function() {
-  if (player.paused) {
-      player.play(); // Play the video if it's paused
-      socket.emit("play-signal-dash", "PLAY")
+function QueueExpandableIcon() {
+  if (allMediaHolder.style.height === '0px') {
+    allMediaHolder.style.height = 'auto';
+    expandableQueue.style.transform = "rotateX(0)";
   } else {
-      player.pause(); // Otherwise, pause the video
-      socket.emit("pause-signal-dash", "PLAY")
+    allMediaHolder.style.height = '0px';
+    expandableQueue.style.transform = "rotateX(180deg)";
   }
-});
+}
+
+function PreviousExpandableIcon() {
+  if (AllPreviousMediaHolder.style.height === '0px') {
+    AllPreviousMediaHolder.style.height = 'auto';
+    previousQueue.style.transform = "rotateX(0)";
+  } else {
+    AllPreviousMediaHolder.style.height = '0px';
+    previousQueue.style.transform = "rotateX(180deg)";
+  }
+}
+
+
+
+//event listeners
+startBtn.addEventListener('click', updatePlayAndPauseBtn);
+
+expandableQueue.addEventListener('click', QueueExpandableIcon)
+
+
+
+previousQueue.addEventListener('click', PreviousExpandableIcon)
 
 addVideoBtn.addEventListener('click', function() {
   let videoLink = addVideoLink.value
@@ -463,14 +586,16 @@ backwardBtn.addEventListener("click", function() {
 RemoveAllQueuedBtn.addEventListener("click", function() {
   socket.emit("remove-all-queued-video", "SEND")
   showBlankVideo()
+  updatePlayerInfoBlank()
 })
 
 clearHistory.addEventListener("click", function() {
   socket.emit("remove-history", "SEND")
 })
 
+
 window.addEventListener('load', checkCheckboxState);
 checkbox.addEventListener('change', handleCheckboxChange);
 addMediaBtn.addEventListener('click', showBackShadowAndAddView)
-cancelVideoBtn.addEventListener('click', hideBackShadowAndAddView)
-backShadow.addEventListener('click', hideBackShadowAndAddView)
+backShadow.addEventListener('click', hideBackShadowAndViews)
+cancelBtns.forEach(cancelBtn => {cancelBtn.addEventListener("click", hideBackShadowAndViews)})

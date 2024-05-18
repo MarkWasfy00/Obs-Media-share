@@ -18,10 +18,15 @@
         <section class="view-bar">
             <div class="views-and-buttons">
                 <div class="playing-view">
-                    <video id="player" playsinline controls>
+                    <video id="player" class="video_player" playsinline controls>
                         <source src="" type="video/mp4"> <!-- Empty source -->
                         Your browser does not support HTML5 video.
                       </video>
+                </div>
+                <div class="playing-title">
+                    <div class="playing-now"></div>
+                    <div class="playing-title-now"></div>
+                    <a class="playing-title-url" target="_blank"></a>
                 </div>
                 <div class="checkbox">
                     <div class="checkbox-title-top">Auto play</div>
@@ -44,19 +49,31 @@
                 <div class="volume"></div>
             </div>
         </section>
+        <section class="navbar-info">
+            <div class="queue-title">Queued Media</div>
+            <!-- <div class="donate-title">Donated Media</div> -->
+        </section>
         <section class="queued-media">
             <div class="queued-top">
-                <div class="queued-info">
-                    <div class="queue-title">Queued Media</div>
-                    <div class="queue-time">
-                        <div class="time-headline">Total time: </div>
-                        <div class="queue-total-time"></div>
+                <div class="queued-extra">
+                    <div class="queued-extra-info">
+                        <div class="queue-time">
+                            <div class="time-headline">Total time: </div>
+                            <div class="queue-total-time">0s</div>
+                        </div>
+                        <div>-</div>
+                        <div class="total-queue">
+                            <div class="total-headline">Total In Queue: </div>
+                            <div class="queue-total-videos">0 videos</div>
+                        </div>
+                    </div>
+                    <div class="queued-control-media">
+                        <div class="queued-add">Add Media</div>
+                        <div class="queued-remove">Remove All</div>
+                        <div class="queued-expand"><svg class="queued-expand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg></div>
                     </div>
                 </div>
-                <div class="queued-control-media">
-                    <div class="queued-add">Add Media</div>
-                    <div class="queued-remove">Remove All</div>
-                </div>
+                
                 <div class="add-media-layout">
                     <div class="add-media-layout-title">Add Media</div>
                     <div class="name">
@@ -94,6 +111,7 @@
                 <div class="previous-title">Previous Media</div>
                 <div class="previous-control-media">
                     <div class="previous-remove">Clear History</div>
+                    <div class="previous-expand"><svg class="previous-expand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg></div>
                 </div>
             </div>
             <div class="all-previous-media"></div>
@@ -102,10 +120,33 @@
                     <div class="media-title-bar">TITLE</div>
                     <div class="media-title-duration">for 60 seconds</div>
                 </div>
+                <div class="left">
+                    <div class="readd">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M463.5 224H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1c-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8H463.5z"/></svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- <section class="side-btns">
+            <button class="streamlabs-socket-btn">
+                <svg id="streamlabs-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg>
+            <!-- </button>
+        </section>  -->
+        <section class="streamlabs-socket-layout">
+            <div class="streamlabs-socket-layout-title">Connect donation videos</div>
+            <div class="name">
+                <div class="streamlabs-token-title">Streamlabs websocket token</div>
+                <input id="streamlabs-token-tk" type="text">
+            </div>
+            <div class="buttons">
+                <button class="connect-token">Connect</button>
+                <button class="disconnect-token">Disconnect</button>
+                <button class="cancel">Cancel</button>
             </div>
         </section>
     </main>
-
+   
+    
     <div class="backshadow"></div>
     
     
