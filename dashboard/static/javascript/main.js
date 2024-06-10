@@ -28,7 +28,7 @@ const playingViewNow = document.querySelector(".playing-now")
 const playingViewUrl = document.querySelector(".playing-title-url")
 
 
-let socket = io.connect('http://localhost:5000', {
+let socket = io.connect('http://85.239.240.70:5000', {
   reconnection: true,              // Enable reconnection
   reconnectionAttempts: Infinity,  // Number of attempts before giving up
   reconnectionDelay: 1000,         // Delay between reconnection attempts (1 second)

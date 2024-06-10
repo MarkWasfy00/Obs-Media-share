@@ -13,7 +13,7 @@ const totalDonatedTime = document.querySelector(".donated-total-time")
 const expandableDonation = document.querySelector(".donated-expand-icon")
 const donatedTotalVideos = document.querySelector(".donated-total-videos")
 
-let socket = io.connect('http://localhost:5000', {
+let socket = io.connect('http://85.239.240.70:5000', {
   reconnection: true,              // Enable reconnection
   reconnectionAttempts: Infinity,  // Number of attempts before giving up
   reconnectionDelay: 1000,         // Delay between reconnection attempts (1 second)
