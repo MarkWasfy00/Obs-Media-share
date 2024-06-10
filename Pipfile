@@ -26,6 +26,12 @@ forex-python = "*"
 currencyconverter = "*"
 toml = "*"
 websocket-client = "*"
+beautifulsoup4 = "*"
+browser-cookie3 = "*"
+numpy = "*"
+pandas = "*"
+streamlit = "*"
+pyktok = "*"
 
 [dev-packages]
 

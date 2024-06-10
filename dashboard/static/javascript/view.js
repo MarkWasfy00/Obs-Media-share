@@ -1,4 +1,8 @@
-let socket = io.connect('http://85.239.240.70:5000');
+let socket = io.connect('http://85.239.240.70:5000', {
+  reconnection: true,              // Enable reconnection
+  reconnectionAttempts: Infinity,  // Number of attempts before giving up
+  reconnectionDelay: 1000,         // Delay between reconnection attempts (1 second)
+});
 // let player = new Plyr('#player', {controls: []});
 let player;
 
@@ -53,6 +57,14 @@ function reloadPage() {
   location.reload(); // Reload the page
 }
 
+
+socket.on('connect', function() {
+  console.log('Connected from server');
+
+  setInterval(() => {
+    socket.emit('heartbeat', "SEND");
+  }, 25000);
+});
 
 socket.on('update-data', function(url) {
     const vidCode  = extractYouTubeVideoCode(url)

@@ -2,6 +2,12 @@ import json
 import re
 from pytube import YouTube, Playlist
 from currency_converter import CurrencyConverter
+import requests
+from bs4 import BeautifulSoup
+import pyktok as pyk
+import shutil
+import os
+import glob
 
 class Backend_donated:
     def __init__(self):
@@ -11,6 +17,24 @@ class Backend_donated:
 
         self.currentVideo = {}
         self.totalTime = 0
+
+    def detect_platform(self,url):
+        # Regular expressions for each platform
+        youtube_regex = re.compile(r'(https?://)?(www\.)?(youtube\.com|youtu\.be)')
+        tiktok_regex = re.compile(r'(https?://)?(www\.)?tiktok\.com')
+        instagram_regex = re.compile(r'(https?://)?(www\.)?instagram\.com')
+        twitter_regex = re.compile(r'(https?://)?(www\.)?twitter\.com')
+        
+        if youtube_regex.search(url):
+            return "Youtube"
+        elif tiktok_regex.search(url):
+            return "Tiktok"
+        elif instagram_regex.search(url):
+            return "Instagram"
+        elif twitter_regex.search(url):
+            return "Twitter"
+        else:
+            return "Unknown platform"        
 
     def __detect_if_shorts(self, youtube_url):
         # Regular expression to match shorts YouTube URL
@@ -70,33 +94,96 @@ class Backend_donated:
         self.__save_data(history, self.HISTORY_FILE_DONATED)
 
     def add_video_data(self, url,start_time,currency,price,callback=None):
-        TYPE, modefiedURL = self.__detect_if_shorts(url)
-        try:
-            ulrStartTime, video_length = self.__construct_start_time_url(
-                modefiedURL if TYPE == "shorts" else url, str(start_time)
-            )
-            yt = YouTube(url if TYPE == "video" else modefiedURL)
-            title = yt.title
-            video_data = self.__load_data(self.VIDEO_DATA_DONATED_FILE)
-            new_id = str(max(map(int, video_data.keys()), default=0) + 1)
-            price_in_dollar,time_in_Seconds = self.__calculate_time(currency,price)                                 #->>> activate this line after creating function
-            video_data[new_id] = {
-                "TYPE" :"DONATED",
-                "URL": ulrStartTime,
-                "title": title or "NONE",
-                "duration": time_in_Seconds,                                                                          #->>> activate this line after creating function
-                "start_time": str(start_time),
-                "video_length": video_length or 0,  
-                "price_in_dollar" :price_in_dollar                                                             #->>> activate this line after creating function
-            }
-            self.totalTime += video_length
-            self.__save_data(video_data, self.VIDEO_DATA_DONATED_FILE)
-            if callback :
-                callback(video_data, len(video_data), self.totalTime)
-            return video_data, len(video_data), self.totalTime
-        except Exception as e:
-            print(f"An error occurred while processing video URL {url}: {e}")
-            return None, None
+        platform=self.detect_platform(url=url)
+        if(platform=="Youtube"):
+            TYPE, modefiedURL = self.__detect_if_shorts(url)
+            try:
+                    ulrStartTime, video_length = self.__construct_start_time_url(
+                        modefiedURL if TYPE == "shorts" else url, str(start_time)
+                    )
+                    yt = YouTube(url if TYPE == "video" else modefiedURL)
+                    title = yt.title
+                    video_data = self.__load_data(self.VIDEO_DATA_DONATED_FILE)
+                    new_id = str(max(map(int, video_data.keys()), default=0) + 1)
+                    price_in_dollar,time_in_Seconds = self.__calculate_time(currency,price)                                 #->>> activate this line after creating function
+                    video_data[new_id] = {
+                        "Platform" :platform,
+                        "TYPE" :"DONATED",
+                        "URL": ulrStartTime,
+                        "title": title or "NONE",
+                        "duration": time_in_Seconds,                                                                          #->>> activate this line after creating function
+                        "start_time": str(start_time),
+                        "video_length": video_length or 0,
+                        "price_in_dollar" :price_in_dollar                                                             #->>> activate this line after creating function
+                    }
+                    self.totalTime += video_length
+                    self.__save_data(video_data, self.VIDEO_DATA_DONATED_FILE)
+                    if callback :
+                        callback(video_data, len(video_data), self.totalTime)
+                    return video_data, len(video_data), self.totalTime
+            except Exception as e:
+                    print(f"An error occurred while processing youtupe video URL {url}: {e}")
+                    return None, None, None
+        elif(platform=="Tiktok"):
+            try:
+                    #get the title from Tiktok official library    
+                    oembed_url = f'https://www.tiktok.com/oembed?url={url}'
+                    response = requests.get(oembed_url)
+                    title = response.json()['title']
+                    #get the duration from unofficial tiktok library
+                    headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) edge/91.0.4472.124 Safari/537.36'
+                    }                       
+                    response = requests.get(url, headers=headers)
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    video_length_script = soup.find('script', string=re.compile('duration'))
+
+                    match = re.search(r'"duration":(\d+)', video_length_script.string)
+                    video_length = int(match.group(1))
+
+
+                    video_data = self.__load_data(self.VIDEO_DATA_DONATED_FILE)
+                    new_id = str(max(map(int, video_data.keys()), default=0) + 1)
+                    price_in_dollar,time_in_Seconds = self.__calculate_time(currency,price)
+                    video_data[new_id] = {
+                        "Platform" :platform,
+                        "TYPE" :"DONATED",
+                        "Path" :url,
+                        "URL": "",
+                        "title": title or "NONE",
+                        "duration": time_in_Seconds,                                                                          #->>> activate this line after creating function
+                        "start_time": str(start_time),
+                        "video_length": video_length or 0,  
+                        "price_in_dollar" :price_in_dollar                                                             #->>> activate this line after creating function
+                    }
+                    
+                    base_directory = os.path.join('static', 'donated')
+                    os.makedirs(base_directory, exist_ok=True)
+                    print(base_directory)
+                    files_before = set(glob.glob(os.path.join('.', '*.mp4')))
+                    print("files before iss",files_before)
+                    
+                    pyk.save_tiktok(video_data[new_id]["Path"], False,'edge')
+                    
+                    files_after = set(glob.glob(os.path.join('.', '*.mp4')))
+                    print("files after iss",files_after)
+                    new_files = files_after - files_before
+                    
+                    downloaded_filename = new_files.pop() if new_files else None                    
+                    if downloaded_filename:
+                            new_path = os.path.join(base_directory, os.path.basename(downloaded_filename))
+                            shutil.move(downloaded_filename, new_path)
+                    downloaded_filename=downloaded_filename.lstrip(".\\")   
+                    self.totalTime += video_length
+                    video_data[new_id]['URL']=downloaded_filename
+                    self.__save_data(video_data, self.VIDEO_DATA_DONATED_FILE)                   
+                    return video_data, len(video_data), self.totalTime
+            except Exception as e:
+                    print(f"An error occurred while processing Tiktok video URL {url}: {e}")
+                    return None, None, None
+        else:
+            print("its not youtupe nor instgram")
+            
 
     def __remove_video_data(self, video_id):
         video_data = self.__load_data(self.VIDEO_DATA_DONATED_FILE)
@@ -178,7 +265,16 @@ class Backend_donated:
                 
                 # Add the video to the regular queue
                 regular_videos[new_id] = video_data
-                
+                # Define the directory and pattern for old files
+                base_directory = os.path.join('static', 'donated')
+                os.makedirs(base_directory, exist_ok=True)
+                pattern = video_data['URL']
+                for file_path in glob.glob(os.path.join(base_directory, pattern)):
+                        try:
+                            os.remove(file_path)
+                            print(f"Deleted old file: {file_path}")
+                        except OSError as e:
+                                print(f"Error: {file_path} : {e.strerror}")
                 # Remove the video from the donated queue and shift subsequent videos
                 del donated_videos[video_id_str]
                 donated_videos = self.__shift_video_ids(donated_videos, video_id)
@@ -217,6 +313,20 @@ class Backend_donated:
             video_id_str = str(video_id)
             if video_id_str in donated_videos:
                 # Remove the video from the donated queue
+                # Define the directory and pattern for old files
+                video_data = donated_videos[video_id_str]
+                base_directory = os.path.join('static', 'donated')
+                os.makedirs(base_directory, exist_ok=True)
+                pattern = video_data['URL']             
+                for file_path in glob.glob(os.path.join(base_directory, pattern)):
+                        try:
+                            os.remove(file_path)
+                            print(f"Deleted old file: {file_path}")
+                        except OSError as e:
+                                print(f"Error: {file_path} : {e.strerror}")
+
+
+
                 del donated_videos[video_id_str]
 
                 # Shift subsequent videos IDs down
@@ -238,16 +348,3 @@ class Backend_donated:
     def get_queue(self):
         queue=self.__load_data(self.VIDEO_DATA_DONATED_FILE)
         return queue
-
-
-# backend=Backend_donated()
-# backend.add_video_data("https://www.youtube.com/watch?v=ItiJndjOHZ0","1","USD",2,None)
-# backend.add_video_data("https://www.youtube.com/watch?v=ItiJndjOHZ0","2","EUR",2,None)
-# backend.add_video_data("https://www.youtube.com/watch?v=ItiJndjOHZ0","3","EUR",2,None)
-# backend.add_video_data("https://www.youtube.com/watch?v=ItiJndjOHZ0",4,"EUR",2,None)
-# backend.add_video_data("https://www.youtube.com/watch?v=ItiJndjOHZ0","5","EUR",3,None)
-# backend.add_video_data("https://www.youtube.com/watch?v=ItiJndjOHZ0","6","EUR",3,None)
-# backend.add_video_data("https://www.youtube.com/watch?v=WwFuB1GRKz4","7","EUR",3,None)
-# backend.add_video_data("https://www.youtube.com/watch?v=WwFuB1GRKz4","8","EUR",3,None)
-# # # print(backend.get_queue())
-# # # # backend.accept(3)

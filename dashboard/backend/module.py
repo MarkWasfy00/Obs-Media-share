@@ -1,6 +1,15 @@
 import json
 import re
 from pytube import YouTube, Playlist
+import requests
+from bs4 import BeautifulSoup
+import shutil
+
+import os
+import glob
+import pyktok as pyk
+
+
 
 class Backend:
     def __init__(self):
@@ -9,6 +18,23 @@ class Backend:
         self.current_FILE ="current.json"
         self.currentVideo = {}
         self.totalTime = 0
+    def detect_platform(self,url):
+        # Regular expressions for each platform
+        youtube_regex = re.compile(r'(https?://)?(www\.)?(youtube\.com|youtu\.be)')
+        tiktok_regex = re.compile(r'(https?://)?(www\.)?tiktok\.com')
+        instagram_regex = re.compile(r'(https?://)?(www\.)?instagram\.com')
+        twitter_regex = re.compile(r'(https?://)?(www\.)?twitter\.com')
+        
+        if youtube_regex.search(url):
+            return "Youtube"
+        elif tiktok_regex.search(url):
+            return "Tiktok"
+        elif instagram_regex.search(url):
+            return "Instagram"
+        elif twitter_regex.search(url):
+            return "Twitter"
+        else:
+            return "Unknown platform"    
 
     def detect_if_shorts(self, youtube_url):
         # Regular expression to match shorts YouTube URL
@@ -68,31 +94,78 @@ class Backend:
         self.__save_data(history, self.HISTORY_FILE)
 
     def add_video_data(self, url, duration, start_time,callback=None):
-        TYPE, modefiedURL = self.detect_if_shorts(url)
-        try:
-            ulrStartTime, video_length = self.__construct_start_time_url(
-                modefiedURL if TYPE == "shorts" else url, start_time=start_time
-            )
-            yt = YouTube(url if TYPE == "video" else modefiedURL)
-            title = yt.title
-            video_data = self.__load_data(self.VIDEO_DATA_FILE)
-            new_id = str(max(map(int, video_data.keys()), default=0) + 1)
-            video_data[new_id] = {
-                "TYPE" :"STANDARD",
-                "URL": ulrStartTime,
-                "title": title or "NONE",
-                "duration": duration,
-                "start_time": start_time,
-                "video_length": video_length or 0,
-            }
-            self.totalTime += video_length
-            self.__save_data(video_data, self.VIDEO_DATA_FILE)
-            if callback :
-                callback(video_data, len(video_data), self.totalTime)
-            return video_data, len(video_data), self.totalTime
-        except Exception as e:
-            print(f"An error occurred while processing video URL {url}: {e}")
-            return None, None
+        platform=self.detect_platform(url=url)
+        if(platform=="Youtube"):
+            TYPE, modefiedURL = self.detect_if_shorts(url)
+            try:
+                ulrStartTime, video_length = self.__construct_start_time_url(
+                    modefiedURL if TYPE == "shorts" else url, start_time=start_time
+                )
+                yt = YouTube(url if TYPE == "video" else modefiedURL)
+                title = yt.title
+                video_data = self.__load_data(self.VIDEO_DATA_FILE)
+                new_id = str(max(map(int, video_data.keys()), default=0) + 1)
+                video_data[new_id] = {
+                    "Platform" :platform,
+                    "TYPE" :"STANDARD",
+                    "URL":  ulrStartTime,
+                    "title": title or "NONE",
+                    "duration": duration,
+                    "start_time": start_time,
+                    "video_length": video_length or 0,
+                }
+                self.totalTime += video_length
+                self.__save_data(video_data, self.VIDEO_DATA_FILE)
+                if callback :
+                    callback(video_data, len(video_data), self.totalTime)
+                return video_data, len(video_data), self.totalTime
+            except Exception as e:
+                print(f"An error occurred while processing youtupe video URL {url}: {e}")
+                return None, None, None
+            
+        elif(platform=="Tiktok"):
+            try:
+                #get the title from Tiktok official library    
+                oembed_url = f'https://www.tiktok.com/oembed?url={url}'
+                response = requests.get(oembed_url)
+                title = response.json()['title']
+                #get the duration from unofficial tiktok library
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                response = requests.get(url, headers=headers)
+                soup = BeautifulSoup(response.content, 'html.parser')
+                video_length_script = soup.find('script', string=re.compile('duration'))
+
+                match = re.search(r'"duration":(\d+)', video_length_script.string)
+                video_length = int(match.group(1))
+
+                #now reload the old data and the video to it
+                video_data = self.__load_data(self.VIDEO_DATA_FILE)
+                new_id = str(max(map(int, video_data.keys()), default=0) + 1)
+                video_data[new_id] = {
+                    "Platform" :platform,
+                    "TYPE" :"STANDARD",
+                    "URL":  "",
+                    "Path": url,
+                    "title": title or "NONE",
+                    "duration": duration,
+                    "start_time": start_time,
+                    "video_length": video_length or 0,
+                }
+                self.totalTime += video_length
+                self.__save_data(video_data, self.VIDEO_DATA_FILE)
+                return video_data, len(video_data), self.totalTime
+
+            except Exception as e:
+                print(f"An error occurred while processing Tiktok video URL {url}: {e}")
+                return None, None, None
+        else:
+            print("its not youtupe nor instgram")
+            
+
+
+            
 
     def remove_video_data(self, video_id):
         video_data = self.__load_data(self.VIDEO_DATA_FILE)
@@ -108,6 +181,7 @@ class Backend:
                 self.__save_data(video_data, self.VIDEO_DATA_FILE)
             else:
                 print(f"No video found with ID {video_id}.")
+                return None, None, None
         except ValueError:
             print("Please provide a valid string ID.")
         return video_data, len(video_data), self.totalTime
@@ -115,8 +189,8 @@ class Backend:
     def play_next_video(self):
         try:
             video_data = self.__load_data(self.VIDEO_DATA_FILE)
+            self.currentVideo=self.__load_data(self.current_FILE)
             if self.currentVideo != {}:
-                print("here")
                 self.__add_to_history(self.currentVideo)
             if not(video_data):
                 self.currentVideo = {}
@@ -125,9 +199,46 @@ class Backend:
 
             if "1" in video_data:
                 self.currentVideo = video_data["1"]
-                self.__save_data(self.currentVideo, self.current_FILE)
-                self.remove_video_data("1")
-                return self.currentVideo, self.get_queue(), self.get_history()
+                #lets check if its youtupe or tiktok here to download the video
+                if(self.currentVideo['Platform']=="Youtube"):
+                        print("here Youtube")
+                        self.__save_data(self.currentVideo, self.current_FILE)
+                        self.remove_video_data("1")
+                        return self.currentVideo, self.get_queue(), self.get_history()
+                elif(self.currentVideo["Platform"]=="Tiktok"):
+                        # Specify the browser type
+                        pyk.specify_browser('edge')
+
+                   
+
+                        # Define the directory and pattern for old files
+                        base_directory = os.path.join('static', 'videos')
+                        os.makedirs(base_directory, exist_ok=True)
+                        pattern = '*.mp4'
+                        # Find and delete old files
+                        for file_path in glob.glob(os.path.join(base_directory, pattern)):
+                            try:
+                                os.remove(file_path)
+                                print(f"Deleted old file: {file_path}")
+                            except OSError as e:
+                                print(f"Error: {file_path} : {e.strerror}")
+
+                        # Call the save_tiktok function with the specified parameters
+                        files_before = set(glob.glob(os.path.join('.', pattern)))
+                        print("before",files_before)
+                        pyk.save_tiktok(self.currentVideo["Path"], False,'edge')
+                        files_after = set(glob.glob(os.path.join('.', pattern)))
+                        new_files = files_after - files_before
+                        downloaded_filename = new_files.pop() if new_files else None
+                        if downloaded_filename:
+                            new_path = os.path.join(base_directory, os.path.basename(downloaded_filename))
+                            shutil.move(downloaded_filename, new_path)
+                        downloaded_filename=downloaded_filename.lstrip(".\\")   
+
+                        self.currentVideo["URL"]=downloaded_filename
+                        self.__save_data(self.currentVideo, self.current_FILE)
+                        self.remove_video_data("1")
+                        return self.currentVideo, self.get_queue(), self.get_history()
             else:
                 return self.currentVideo, self.get_queue(), self.get_history()
 
@@ -141,16 +252,17 @@ class Backend:
             playlist_videos = playlist.video_urls
             for url in playlist_videos:
                 video_data, len_video_data, totalTime = self.add_video_data(url,"","",callback)
-            return video_data,len_video_data,self.totalTime
+            return video_data, len_video_data, self.totalTime
         except Exception as e:
             print(f"An error occurred while extracting playlist URLs: {e}")
-            return []
+            return [], [], []
 
-    def play_previous_video(self):
+    def play_previous_video(self):  
         try:
             history_data = self.__load_data(self.HISTORY_FILE)
             last_index_history = str(len(history_data))  # Get the last index of the video data
             video_data = self.__load_data(self.VIDEO_DATA_FILE)
+            self.currentVideo=self.__load_data(self.current_FILE)
             last_index_queue = str(len(video_data))
             if self.currentVideo != {}:
                 for i in range(int(last_index_queue), 0, -1):
@@ -164,17 +276,49 @@ class Backend:
                 return self.currentVideo, self.get_queue(), self.get_history(), self.totalTime
             if last_index_history in history_data:
                 self.currentVideo = history_data[last_index_history]
-                self.__save_data(self.currentVideo, self.current_FILE)
-                # Shift the existing items by one index
-                del history_data[last_index_history]
-                self.__save_data(history_data, self.HISTORY_FILE)
-                return self.currentVideo , self.get_queue(), self.get_history(), self.totalTime
+                if(self.currentVideo['Platform']=="Youtube"):
+
+                    self.__save_data(self.currentVideo, self.current_FILE)
+                    # Shift the existing items by one index
+                    del history_data[last_index_history]
+                    self.__save_data(history_data, self.HISTORY_FILE)
+                    return self.currentVideo , self.get_queue(), self.get_history(), self.totalTime
+                elif(self.currentVideo['Platform']=="Tiktok"):
+                    pyk.specify_browser('edge')
+
+        
+
+                    # Define the directory and pattern for old files
+                    base_directory = os.path.join('static', 'videos')
+                    os.makedirs(base_directory, exist_ok=True)
+                    pattern = '*.mp4'
+                    # Find and delete old files
+                    for file_path in glob.glob(os.path.join(base_directory, pattern)):
+                        try:
+                                os.remove(file_path)
+                                print(f"Deleted old file: {file_path}")
+                        except OSError as e:
+                                print(f"Error: {file_path} : {e.strerror}")
+                    files_before = set(glob.glob(os.path.join('.', pattern)))
+                    pyk.save_tiktok(self.currentVideo["Path"], False,'edge')
+                    files_after = set(glob.glob(os.path.join('.', pattern)))
+                    new_files = files_after - files_before
+                    downloaded_filename = new_files.pop() if new_files else None
+                    print("name",downloaded_filename)
+                    if downloaded_filename:
+                        new_path = os.path.join(base_directory, os.path.basename(downloaded_filename))
+                        shutil.move(downloaded_filename, new_path)
+                        # Call the save_tiktok function with the specified parameters
+                    self.__save_data(self.currentVideo, self.current_FILE)
+                    del history_data[last_index_history]
+                    self.__save_data(history_data, self.HISTORY_FILE)
+                    return self.currentVideo , self.get_queue(), self.get_history(), self.totalTime
             else:
                 print(f"No video found with ID {last_index_history}.")
-                return None
+                return None ,None ,None,None
         except Exception as e:
             print(f"An error occurred while playing the next video: {e}")
-            return None
+            return None ,None ,None,None
 
     def get_history(self):
         return self.__load_data(self.HISTORY_FILE)
@@ -194,6 +338,7 @@ class Backend:
             return self.get_queue(), self.totalTime
         except Exception as e:
             print(f"An error occurred while removing the queue: {e}")
+            return None, None
 
     def remove_current(self):
         try:
@@ -203,6 +348,7 @@ class Backend:
             return self.currentVideo
         except Exception as e:
             print(f"An error occurred while removing the current: {e}")
+            return None
 
     def remove_history(self):
         try:
@@ -212,6 +358,7 @@ class Backend:
             return self.get_history()
         except Exception as e:
             print(f"An error occurred while removing the history: {e}")
+            return None
 
     def change_order(self, new_order):
         try:

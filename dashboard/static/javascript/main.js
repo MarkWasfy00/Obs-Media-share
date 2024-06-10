@@ -28,7 +28,12 @@ const playingViewNow = document.querySelector(".playing-now")
 const playingViewUrl = document.querySelector(".playing-title-url")
 
 
-let socket = io.connect('http://85.239.240.70:5000');
+let socket = io.connect('http://localhost:5000', {
+  reconnection: true,              // Enable reconnection
+  reconnectionAttempts: Infinity,  // Number of attempts before giving up
+  reconnectionDelay: 1000,         // Delay between reconnection attempts (1 second)
+});
+
 let isPausedFromUser = false;
 let currentDataLen = 0
 let queuedDataLen = 0
@@ -43,6 +48,10 @@ new Sortable(allMediaHolder, {
 
 socket.on('connect', function() {
   console.log('Connected from server');
+
+  setInterval(() => {
+    socket.emit('heartbeat', "SEND");
+  }, 25000);
 });
 
 socket.on('handle-queued-data', function(data) {
@@ -69,12 +78,13 @@ socket.on('handle-previous-data', function(data) {
 
 socket.on('handle-current-data', function(data) {
   if (Object.keys(data).length !== 0) {
-    updatePlayerItself(data["URL"], data["duration"], data["start_time"], data["video_length"])
+    updatePlayerItself(data["URL"], data["duration"], data["start_time"], data["Platform"])
     updatePlayerInfo(data["title"] ,data["URL"])
   } else {
     showBlankVideo()
     updatePlayerInfoBlank()
   }
+  RemoveLoading()
 })
 
 socket.on('handle-resume-button', function(data) {
@@ -173,6 +183,7 @@ function handleCheckboxChange() {
   }
   
   if (checkbox.checked && currentDataLen == 0 && queuedDataLen > 0) {
+    AddLoading()
     socket.emit("next-video", "SEND")
       setTimeout(()=> {
         player.play();
@@ -248,17 +259,23 @@ function clearInputsAndHideShadow () {
   hideBackShadowAndViews()
 }
 
-function extractYouTubeVideoCode(url) {
-  // Regular expression to match the video code in the URL
-  var regex = /[?&]v=([^&]+)/;
-  var match = url.match(regex);
+function extractVideoCodeOrUrl(url) {
+  // Regular expression to match the YouTube video code in the URL
+  let youtubeRegex = regex = /[?&]v=([^&]+)/;
+  let tiktokRegex = /(?:tiktok\.com\/)/;
   
-  if (match && match[1]) {
-      // Extracted video code
-      return match[1];
+  // Check if the URL is a YouTube URL
+  let youtubeMatch = url.match(youtubeRegex);
+  
+  if (youtubeMatch && youtubeMatch[1]) {
+      // Extracted YouTube video code
+      return youtubeMatch[1];
+  } else if (tiktokRegex.test(url)) {
+      // If the URL is a TikTok URL
+      return url;
   } else {
-      // If the URL doesn't match the expected format
-      return null;
+      // If the URL doesn't match either YouTube or TikTok format
+      return url;
   }
 }
 
@@ -329,6 +346,7 @@ function update_previous_data(data) {
     }
     
     newMediaReadd.addEventListener("click", function(event) {
+      AddLoading()
       socket.emit("read-video", key)
     })
 
@@ -336,23 +354,43 @@ function update_previous_data(data) {
   }
 }
 
-function updatePlayerItself(newYouTubeLink, duration, startTime, vidLength) {
+function updatePlayerItself(newYouTubeLink, duration, startTime, platform) {
   let hasInitialized = false;
   let eventHandled = false;
   
-  let vidCode = extractYouTubeVideoCode(newYouTubeLink)
+  let vidCode = extractVideoCodeOrUrl(newYouTubeLink)
   player.destroy()
 
-  player = new Plyr('#player', {
-    controls: ['progress', 'volume'],
-    duration: (parseInt(duration) + parseInt(startTime)),
-    youtube: {
-      noCookie: true,
-      start: parseInt(startTime),
-      videoId: extractYouTubeVideoCode(newYouTubeLink)
-    }
-  });
+  if (platform == "Youtube") {
+    player = new Plyr('#player', {
+      controls: ['progress', 'volume'],
+      duration: (parseInt(duration) + parseInt(startTime)),
+      youtube: {
+        noCookie: true,
+        start: parseInt(startTime),
+        videoId: extractVideoCodeOrUrl(newYouTubeLink)
+      }
+    });
+  
+  } else {
+    console.log(duration, startTime, "HEREEE");
+    player = new Plyr('#player', {
+      controls: ['progress', 'volume'],
+      duration: (parseInt(duration) + parseInt(startTime)),
+      source: {
+        type: 'video',
+        sources: [
+          {
+              src:  `/static/videos/${extractVideoCodeOrUrl(newYouTubeLink)}`,
+              type: "video/mp4",
+              size: 720
+           }
+         ]
+      }
+    });
+  }
 
+  
    // Listen for seeked event
   player.on('seeked', event => {
     const currentTime = player.currentTime;
@@ -375,17 +413,28 @@ function updatePlayerItself(newYouTubeLink, duration, startTime, vidLength) {
 
   player.on('ready', () => {
     if (!hasInitialized) {
-      player.source = {
-        type: 'video',
-        sources: [
-          {
-            src: vidCode,
-            provider: 'youtube',
-          },
-        ]
-      };
+      if(platform == "Youtube") {
+        player.source = {
+          type: 'video',
+          sources: [
+            {
+              src: vidCode,
+              provider: 'youtube',
+            },
+          ]
+        };
+      } else {
+        player.source = {
+          type: 'video',
+          sources: [
+            {
+              src: `/static/videos/${extractVideoCodeOrUrl(newYouTubeLink)}`,
+            },
+          ]
+        };
+      }
       hasInitialized = true;
-      // player.seek(parseInt(startTime));
+      player.seek(parseInt(startTime));
     }
     updatePlayerProgressBar();
   });
@@ -404,12 +453,14 @@ function updatePlayerItself(newYouTubeLink, duration, startTime, vidLength) {
       if (parseInt(currentTime) >= (parseInt(duration) + parseInt(startTime)) && !eventHandled) {
         eventHandled = true
         if (checkbox.checked) {
+            AddLoading()
             socket.emit("next-video", "SEND");
             setTimeout(() => {
                 player.play();
                 socket.emit("play-signal-dash", "PLAY");
             }, 2000);
         } else {
+          AddLoading()
           socket.emit("next-video", "SEND");
         }
       } else if (parseInt(currentTime) < (parseInt(duration) + parseInt(startTime))) {
@@ -421,6 +472,7 @@ function updatePlayerItself(newYouTubeLink, duration, startTime, vidLength) {
 
   player.on('ended', event => {
     if (checkbox.checked) {
+      AddLoading()
       socket.emit("next-video", "SEND")
       setTimeout(()=> {
         player.play();
@@ -510,14 +562,16 @@ function updatePlayerProgressBar() {
 }
 
 function updatePlayAndPauseBtn() {
-  if (player.paused) {
-    player.play(); // Play the video if it's paused
-    isPausedFromUser = false
-    socket.emit("play-signal-dash", "PLAY")
-  } else {
-    player.pause(); // Otherwise, pause the video
-    isPausedFromUser = true
-    socket.emit("pause-signal-dash", "PLAY")
+  if (!startBtn.classList.contains("Loading")) {
+    if (player.paused) {
+      player.play(); // Play the video if it's paused
+      isPausedFromUser = false
+      socket.emit("play-signal-dash", "PLAY")
+    } else {
+      player.pause(); // Otherwise, pause the video
+      isPausedFromUser = true
+      socket.emit("pause-signal-dash", "PLAY")
+    }
   }
 }
 
@@ -541,6 +595,34 @@ function PreviousExpandableIcon() {
   }
 }
 
+function AddLoading() {
+  const LoadingDivs = [forwardBtn, backwardBtn, startBtn]
+  const className = "Loading"
+
+  LoadingDivs.forEach(div => {
+    // Check if the div doesn't already have the class
+    if (!div.classList.contains(className)) {
+        // Add the class to the div
+        div.classList.add(className);
+    }
+  });
+
+}
+
+
+function RemoveLoading() {
+  const LoadingDivs = [forwardBtn, backwardBtn, startBtn]
+  const className = "Loading"
+
+  LoadingDivs.forEach(div => {
+    // Check if the div doesn't already have the class
+    if (div.classList.contains(className)) {
+        // Add the class to the div
+        div.classList.remove(className);
+    }
+  });
+
+}
 
 
 //event listeners
@@ -576,11 +658,18 @@ addVideoBtn.addEventListener('click', function() {
 })
 
 forwardBtn.addEventListener("click", function() {
-  socket.emit("next-video", "SEND")
+  if (!forwardBtn.classList.contains("Loading")) {
+    AddLoading()
+    socket.emit("next-video", "SEND")
+  }
 })
 
 backwardBtn.addEventListener("click", function() {
-  socket.emit("previous-video", "SEND")
+  if (!backwardBtn.classList.contains("Loading")) {
+    AddLoading()
+    socket.emit("previous-video", "SEND")
+  }
+  
 })
 
 RemoveAllQueuedBtn.addEventListener("click", function() {

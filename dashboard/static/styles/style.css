@@ -200,6 +200,13 @@ main .view-bar .control-view .controls .playing:hover {
   fill: #6d7579;
   cursor: pointer;
 }
+main .view-bar .control-view .controls .Loading {
+  fill: #3d4143;
+}
+main .view-bar .control-view .controls .Loading:hover {
+  cursor: progress;
+  fill: #3d4143;
+}
 main .view-bar .control-view .controls .playing svg {
   width: 1.8rem;
 }
@@ -395,7 +402,8 @@ main .donated-media .all-donated {
   height: auto;
   transition: height 0.3s ease; /* Add transition for smooth animation */
 }
-main .donated-media .all-donated .donated-bar {
+main .donated-media .all-donated .donated-bar,
+main .donated-media .all-donated .donated-bar-video {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -404,52 +412,70 @@ main .donated-media .all-donated .donated-bar {
   cursor: grab;
   background-color: #09161D;
 }
-main .donated-media .all-donated .donated-bar .right {
+main .donated-media .all-donated .donated-bar .right,
+main .donated-media .all-donated .donated-bar-video .right {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
-main .donated-media .all-donated .donated-bar .right .donated-holding-bar {
+main .donated-media .all-donated .donated-bar .right .donated-holding-bar,
+main .donated-media .all-donated .donated-bar-video .right .donated-holding-bar {
   width: 0.7rem;
   fill: white;
 }
-main .donated-media .all-donated .donated-bar .right .donated-holding {
+main .donated-media .all-donated .donated-bar .right .donated-holding,
+main .donated-media .all-donated .donated-bar-video .right .donated-holding {
   width: 18rem;
   height: 10rem;
   border-radius: 1rem;
   overflow: hidden;
 }
-main .donated-media .all-donated .donated-bar .right .donated-holding iframe {
+main .donated-media .all-donated .donated-bar .right .donated-holding video,
+main .donated-media .all-donated .donated-bar-video .right .donated-holding video {
+  width: 100%;
+  height: 100%;
+}
+main .donated-media .all-donated .donated-bar .right .donated-holding iframe,
+main .donated-media .all-donated .donated-bar-video .right .donated-holding iframe {
   width: 100%;
   height: 100%;
   border: none;
 }
-main .donated-media .all-donated .donated-bar .right .donated-title-bar .donation-url {
+main .donated-media .all-donated .donated-bar .right .donated-title-bar .donation-url,
+main .donated-media .all-donated .donated-bar-video .right .donated-title-bar .donation-url {
   color: #878E92;
   font-size: 0.8rem;
 }
-main .donated-media .all-donated .donated-bar .right .donated-title-bar .donated-title-duration {
+main .donated-media .all-donated .donated-bar .right .donated-title-bar .donated-title-duration,
+main .donated-media .all-donated .donated-bar-video .right .donated-title-bar .donated-title-duration {
   font-size: 0.7rem;
 }
-main .donated-media .all-donated .donated-bar .right .donated-title-duration {
+main .donated-media .all-donated .donated-bar .right .donated-title-duration,
+main .donated-media .all-donated .donated-bar-video .right .donated-title-duration {
   font-size: 0.8rem;
 }
-main .donated-media .all-donated .donated-bar .left {
+main .donated-media .all-donated .donated-bar .left,
+main .donated-media .all-donated .donated-bar-video .left {
   display: flex;
   gap: 5rem;
   padding: 2rem;
 }
-main .donated-media .all-donated .donated-bar .left .donated-title-remove {
+main .donated-media .all-donated .donated-bar .left .donated-title-remove,
+main .donated-media .all-donated .donated-bar-video .left .donated-title-remove {
   cursor: pointer;
 }
-main .donated-media .all-donated .donated-bar .left .donated-approve {
+main .donated-media .all-donated .donated-bar .left .donated-approve,
+main .donated-media .all-donated .donated-bar-video .left .donated-approve {
   color: #80F5D2;
 }
-main .donated-media .all-donated .donated-bar .left .donated-deny {
+main .donated-media .all-donated .donated-bar .left .donated-deny,
+main .donated-media .all-donated .donated-bar-video .left .donated-deny {
   color: red;
 }
 main .donated-media .all-donated .donated-bar .left .donated-approve:hover,
-main .donated-media .all-donated .donated-bar .left .donated-deny:hover {
+main .donated-media .all-donated .donated-bar .left .donated-deny:hover,
+main .donated-media .all-donated .donated-bar-video .left .donated-approve:hover,
+main .donated-media .all-donated .donated-bar-video .left .donated-deny:hover {
   cursor: pointer;
 }
 main .previous-media {

@@ -61,6 +61,25 @@
                     <div class="donated-deny">X</div>
                 </div>
             </div>
+            <div class="donated-bar-video hidden">
+                <div class="right">
+                    <div class="donated-holding-bar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></div>
+                    
+                    <div class="donated-holding">
+                        <video id="video" src="" controls></video>
+                    </div>
+                    <div class="donated-title-bar">
+                        <div class="donation-title">TITLE</div>
+                        <a target="_blank" class="donation-url">from: url</a>
+                        <div class="donated-title-duration">for 60 seconds</div>
+                        <div class="donation-price">duration: 23s - price: 23$</div>
+                    </div>
+                </div>
+                <div class="left">
+                    <div class="donated-approve">✓</div>
+                    <div class="donated-deny">X</div>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -72,7 +91,7 @@
         <source src="../static/assets/deny.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
-    <!-- <button class="xtest">Test</button> -->
+    <button class="xtest">Test</button>
   
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js" integrity="sha512-luMnTJZ7oEchNDZAtQhgjomP1eZefnl82ruTH/3Oj/Yu5qYtwL7+dVRccACS/Snp1lFXq188XFipHKYE75IaQQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="../static/javascript/review.js"></script>

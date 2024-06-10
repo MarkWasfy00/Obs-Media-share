@@ -8,11 +8,16 @@ const approveSound = document.getElementById('approve');
 const denySound = document.getElementById('deny');
 const allDonateHolder = document.querySelector(".all-donated")
 const donatedQueueDummy = document.querySelector(".donated-bar")
+const donatedVideoQueueDummy = document.querySelector(".donated-bar-video")
 const totalDonatedTime = document.querySelector(".donated-total-time")
 const expandableDonation = document.querySelector(".donated-expand-icon")
 const donatedTotalVideos = document.querySelector(".donated-total-videos")
 
-let socket = io.connect('http://85.239.240.70:5000');
+let socket = io.connect('http://localhost:5000', {
+  reconnection: true,              // Enable reconnection
+  reconnectionAttempts: Infinity,  // Number of attempts before giving up
+  reconnectionDelay: 1000,         // Delay between reconnection attempts (1 second)
+});
 
 
 new Sortable(allDonateHolder, {
@@ -21,6 +26,14 @@ new Sortable(allDonateHolder, {
     }
 });
   
+
+socket.on('connect', function() {
+  console.log('Connected from server');
+
+  setInterval(() => {
+    socket.emit('heartbeat', "SEND");
+  }, 25000);
+});
 
 socket.on('handle-donated-data', function(data) {
     update_donated_data(data[0])
@@ -33,7 +46,17 @@ function update_donated_data(data) {
     let totalTime = 0
     for (let key in data) {
       const vid = data[key]
-      const newDonatedEntry  = donatedQueueDummy.cloneNode(true)
+
+      let newDonatedEntry
+
+      if (vid["Platform"] == "Youtube") {
+        newDonatedEntry = donatedQueueDummy.cloneNode(true)
+        
+      }else {
+        newDonatedEntry = donatedVideoQueueDummy.cloneNode(true)
+      }
+      // here
+      
       newDonatedEntry.classList.remove('hidden');
       newDonatedEntry.setAttribute("data-id", `${key}`);
       
@@ -43,7 +66,7 @@ function update_donated_data(data) {
       const newDonatedPrice = newDonatedEntry.querySelector(".donation-price")
       const newApproveDonated = newDonatedEntry.querySelector(".donated-approve")
       const newDenyDonated = newDonatedEntry.querySelector(".donated-deny")
-      const newIframeDonated = newDonatedEntry.querySelector("iframe")
+      
       
       newDonatedTitle.innerHTML  = vid["title"]
       newDonatedUrl.innerHTML = vid["URL"]
@@ -72,7 +95,27 @@ function update_donated_data(data) {
         socket.emit("donation-deny", key)
       })
   
-      newIframeDonated.setAttribute("src", `https://www.youtube-nocookie.com/embed/${extractYouTubeVideoCode(vid["URL"])}?start=${vid["start_time"]}&end=${parseInt(vid["start_time"]) + parseInt(vid["duration"])}`)
+
+      if (vid["Platform"] == "Youtube") {
+        const newIframeDonated = newDonatedEntry.querySelector("iframe")
+        newIframeDonated.setAttribute("src", `https://www.youtube-nocookie.com/embed/${extractYouTubeVideoCode(vid["URL"])}?start=${vid["start_time"]}&end=${parseInt(vid["start_time"]) + parseInt(vid["duration"])}`)
+      } else {
+        const newIframeDonated = newDonatedEntry.querySelector("#video")
+        newIframeDonated.src = `/static/donated/${vid["URL"]}`
+
+        newIframeDonated.addEventListener('loadedmetadata', () => {
+          // Set the video's current time to 10 seconds
+          newIframeDonated.currentTime = parseInt(vid["start_time"]);
+        });
+    
+        newIframeDonated.addEventListener('timeupdate', () => {
+            // Pause the video at 20 seconds 
+            if (newIframeDonated.currentTime >= parseInt(vid["start_time"]) + parseInt(vid["duration"])) {
+              newIframeDonated.pause();
+            }
+        });
+
+      }
   
       
       allDonateHolder.appendChild(newDonatedEntry)
